@@ -9,27 +9,29 @@ int main(int argc, char* argv[]) {
   srandom(0);
 
   if (argc != 4) {
-  printf("usage: samples filename numberfrags maxfragsize\n");
-  return EXIT_FAILURE;
+    printf("usage: ./samples filename numberfrags maxfragsize\n");
+    return EXIT_FAILURE;
   }
-
+  
   struct stat s;
-  int file_size = stat(argv[1], &s);
-  if (file_size == -1) {
+  if (stat(argv[1], &s) == -1) {
     puts("There was an error getting file info");
-    exit(-1);
+    return EXIT_FAILURE;
   }
-
-
+  int file_size = s.st_size;
+  
+  
   for (int i = 0; i < n; i++) {
-    fseek(fp, random()%(file_size - m), SEEK_SET);
+    fseek(fp, random() % (file_size - m), SEEK_SET);
     printf(">");
     for (int j = 0; j < m; j++) {
-      printf("%c", fgetc(fp));
+      int c = fgetc(fp);
+      if (c == '\n') {printf("%c", ' ');}
+      else {printf("%c", c);}
     }
     printf("<\n");
   }
   fclose(fp);
-
+  
   return EXIT_SUCCESS;
 }
