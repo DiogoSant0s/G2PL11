@@ -8,3 +8,4 @@
 /dataSources.local.xml
 .idea/
 cmake-build-debug/*
+.vscode/
