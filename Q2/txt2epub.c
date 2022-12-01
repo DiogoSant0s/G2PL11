@@ -1,69 +1,64 @@
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <syscall.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
-int main(int argc, const char *argv[]) {
+void pandoc_converter(char *fname) {
+    char *command = "pandoc";
+    char *setting = "-o";
+    char *setting1 = "--quiet"; //no warnings
+    char *arg1 = fname;
+    //file output
+    char *output_fname = strdup(fname);
+    int len = strlen(arg1);
+    // tirar .txt e pôr .epub
+    output_fname[len] = 'b';
+    output_fname[len - 1] = 'u';
+    output_fname[len - 2] = 'p';
+    output_fname[len - 3] = 'e';
+    output_fname[len - 4] = '.';
 
-    char epubs[argc-1];
+    //o execlp executa o comando que lhe passo em primeiro lugar com o argv que lhe passo no resto dos argumentos
+    execlp(command, command, fname, setting, output_fname, setting1, (char *)0);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("usage: ./txt2epub f1.txt f2.txt ... fn.txt\n");
+    return EXIT_FAILURE;
+    }
+    
+    //char *file1 = argv[1];
+    // a cada ficheiro, um filho
     for (int i = 1; i < argc; i++) {
-
-        pid_t pid;
-
-        if (( pid = fork() ) == -1) {           //fork error
-            fprintf(stderr, "%s: can't fork command: %s\n", argv[0], strerror(errno));
-            continue;
-        }
-        else if (pid == 0) {            //child process
-            //pid_t n;
-            const char * filename_txt = argv[i];
-            char filename[strlen(filename_txt)];
-
-            strcpy(filename, filename_txt);
-            filename[strlen(filename) - 4] = '\0';
-            strcat(filename, ".epub");
-
-            epubs[i-1] = malloc( (strlen(filename)+1) * sizeof(char) );
-            strcpy(epubs[i-1], filename);
-
-            printf("[pid%i] converting %s ... \n", getpid(), filename_txt);
-            execlp("pandoc", "pandoc", filename_txt, "-o", filename, (char *)0);
-
-        } 
-        else {
-            if (waitpid(pid, NULL, 0) == -1) {
-                perror("wait");
-                return EXIT_FAILURE;
-            }
-        }
-
-        //remove(argv[i]);
+        int pid;  // para saber se é o pai ou o filho
+        
+        // fork processo
+        pid = fork();
+        if ((pid) < 0) {
+            // Se o pid for menor que 0 então dá erro
+            fprintf(stderr, "Fork failed");
+            exit(EXIT_FAILURE);
+    	} else if (pid == 0) {
+    	    // se o pid for 0 então este é o processo filho
+            pandoc_converter(fname);
+    	} else {
+    	    // se o pid for maior que 0, então este é o processo pai
+        	// esperar que o processo filho acabe
+    	    printf("[pid%i] converting %s ... \n", getpid(), fname);
+    	}
     }
 
-   char *zip[argc + 4];
-    zip[0] = malloc((strlen("zip") + 1) * sizeof(char));
-    strcpy(zip[0], "zip");
-    zip[1] = malloc((strlen("ebooks.zip") + 1) * sizeof(char));
-    strcpy(zip[1], "ebooks.zip");
-    for(int k = 0; k < argc - 1; k++){
-        char temp[sizeof(argv[k + 1]+1)] = {}, *dot;
-        strcpy(temp, argv[k + 1]);
-        dot = strchr(temp, '.');
-        if(dot != 0){*dot = 0;}
-        strcat(temp, ".epub");
-        zip[k + 2] = malloc((strlen(temp) + 1) * sizeof(char));
-        strcpy(zip[k+2], temp);
+    // esperar pelos filhos
+     for (int i = 1; i < argc; i++) {
+    /*
+        int status = 0;
+        pid_t childpid = wait(&status);*/
+        wait(0);
     }
-    zip[argc + 2] = "--quiet";
-    zip[argc + 3] = NULL;
-
-    execvp(zip[0], zip);
-
-    return EXIT_SUCCESS;
+    
+    system("zip ebooks *.epub");
+    return (EXIT_SUCCESS);
 }
