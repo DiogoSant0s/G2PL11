@@ -7,7 +7,7 @@
 
 void Filename_converter(char *filename_txt) {
     char *arg1 = filename_txt;
-    char *output_fname = strdup(filename_txt); //filename.epub
+    char *output_fname = strdup(filename_txt); // filename.epub
     int len = strlen(arg1);
     // tirar .txt e pôr .epub
     output_filename[len] = 'b';
@@ -17,7 +17,7 @@ void Filename_converter(char *filename_txt) {
     output_filename[len - 4] = '.';
 
     //executa o pandoc mudando o valor do filename.txt para o filename.epub
-    execlp((char *)"pandoc", (char *)"pandoc",(char *)filename_txt, (char *)"-o", (char *)output_filename, "--quiet", (char *)0);
+    execlp((char *)"pandoc", (char *)"pandoc", (char *)filename_txt, (char *)"-o", (char *)output_filename, (char *)"--quiet", (char *)0);
 }
 
 int main(int argc, char *argv[]) {
@@ -26,14 +26,14 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
     }
     
-    //char *file1 = argv[1];
+    // char *file1 = argv[1];
     // a cada ficheiro, um filho
     for (int i = 1; i < argc; i++) {
         int pid;  // para saber se é o pai ou o filho
         
         pid = fork();
         if ((pid) < 0) { 
-            //fork error se pid menor que 0
+            // fork error se pid menor que 0
             fprintf(stderr, "Fork failed");
             exit(EXIT_FAILURE);
     	} else if (pid == 0) {
